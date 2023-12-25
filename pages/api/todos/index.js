@@ -14,10 +14,10 @@ export default async function handler(req, res) {
       const todos = await collection.find({}).toArray();
       res.status(200).json({ success: true, data: todos });
     } else if (req.method === 'POST') {
-      const { text } = req.body;
-      const todo = await collection.insertOne({ text });
-      res.status(201).json({ success: true, data: todo.ops[0] });
-    } else {
+        const { text } = req.body;
+        const todo = await collection.insertOne({ text, status: 'incomplete' });
+        res.status(201).json({ success: true, data: todo.ops[0] });
+      } else {
       res.status(405).json({ success: false, error: 'Method not allowed' });
     }
   } catch (error) {

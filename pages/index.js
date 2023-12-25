@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 const Home = () => {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
-  const [editingTodo, setEditingTodo] = useState(null); 
+  const [editingTodo, setEditingTodo] = useState(null);
   const [editedText, setEditedText] = useState('');
 
   const fetchTodos = async () => {
@@ -31,7 +31,7 @@ const Home = () => {
 
       const data = await response.json();
       if (data.success) {
-        setTodos([...todos, data.data]);
+        setTodos([...todos, { ...data.data, status: 'incomplete' }]);
         setNewTodo('');
       }
     } catch (error) {
@@ -83,9 +83,31 @@ const Home = () => {
     }
   };
 
+  const toggleStatus = async (id, status) => {
+    try {
+      const response = await fetch(`/api/todos/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        const updatedTodos = todos.map((todo) =>
+          todo._id === id ? { ...todo, status: data.data.status } : todo
+        );
+        setTodos(updatedTodos);
+      }
+    } catch (error) {
+      console.error('Error toggling status:', error);
+    }
+  };
+
   useEffect(() => {
     fetchTodos();
-  }, [setNewTodo]);
+  }, [newTodo, editingTodo]);
 
   return (
     <div>
@@ -114,10 +136,19 @@ const Home = () => {
               </>
             ) : (
               <>
-                <div>{todo.text}</div>
+                <div>
+                  {todo.text} - Status: {todo.status}
+                </div>
                 <div>
                   <button onClick={() => setEditingTodo(todo)}>Edit</button>
                   <button onClick={() => deleteTodo(todo._id)}>Delete</button>
+                  <button
+                    onClick={() =>
+                      toggleStatus(todo._id, todo.status === 'incomplete' ? 'complete' : 'incomplete')
+                    }
+                  >
+                    {todo.status === 'incomplete' ? 'Mark Complete' : 'Mark Incomplete'}
+                  </button>
                 </div>
               </>
             )}
